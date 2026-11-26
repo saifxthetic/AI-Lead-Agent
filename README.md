@@ -38,6 +38,20 @@ AI Lead Agent helps businesses manage potential customers, automatically analyze
 - View recent leads.
 - Monitor backend connection status.
 
+## Application Screenshots
+
+### Main Dashboard
+![AI Lead Agent Dashboard](screenshots/dashboard.png)
+
+### Lead Details and AI Analysis
+![Lead Details](screenshots/lead-details.png)
+
+### AI Follow-Up Manager
+![Follow-Up Manager](screenshots/follow-up-manager.png)
+
+### Advanced Analytics
+![Advanced Analytics](screenshots/advanced-analytics.png)
+
 ## Technology Stack
 
 | Area | Technology |
