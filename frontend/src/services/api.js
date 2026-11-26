@@ -49,4 +49,33 @@ export const filterLeads = async (filters = {}) => {
     return response.data;
 };
 
+// Generate an AI follow-up recommendation
+export const generateFollowup = async (leadId) => {
+    const response = await api.post(
+        `/leads/${leadId}/followups/generate`
+    );
+    return response.data;
+};
+
+// Retrieve follow-up history for a lead
+export const getLeadFollowups = async (leadId) => {
+    const response = await api.get(
+        `/leads/${leadId}/followups`
+    );
+    return response.data;
+};
+
+// Update follow-up status
+export const updateFollowupStatus = async (
+    leadId,
+    followupId,
+    status
+) => {
+    const response = await api.patch(
+        `/leads/${leadId}/followups/${followupId}`,
+        { status }
+    );
+    return response.data;
+};
+
 export default api;

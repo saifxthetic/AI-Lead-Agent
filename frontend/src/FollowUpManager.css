@@ -1,0 +1,494 @@
+
+.followup-manager {
+  margin-top: 26px;
+  padding: 26px;
+}
+
+.followup-heading,
+.followup-controls,
+.followup-selected-lead,
+.followup-card-top,
+.followup-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.followup-heading {
+  margin-bottom: 24px;
+}
+
+.followup-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6558e8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 9px;
+}
+
+.followup-heading h3 {
+  margin: 0 0 7px;
+  color: #20243a;
+  font-size: 21px;
+}
+
+.followup-heading p,
+.followup-history-heading p {
+  margin: 0;
+  color: #858da0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.followup-heading-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #6558e8;
+  background: #f0efff;
+  flex-shrink: 0;
+}
+
+.followup-controls {
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.followup-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.followup-select-group label {
+  color: #555d72;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.followup-select-group select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #e5e8f0;
+  border-radius: 9px;
+  background: #fff;
+  color: #34394d;
+  padding: 0 12px;
+  outline: none;
+  font-size: 13px;
+}
+
+.followup-select-group select:focus {
+  border-color: #6558e8;
+}
+
+.generate-followup-button,
+.mark-completed-button,
+.mark-pending-button,
+.copy-followup-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.generate-followup-button {
+  min-height: 44px;
+  padding: 0 17px;
+  border: none;
+  border-radius: 9px;
+  background: #6558e8;
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.generate-followup-button:hover:not(:disabled) {
+  background: #5145d0;
+}
+
+.generate-followup-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.followup-selected-lead {
+  justify-content: flex-start;
+  padding: 14px;
+  border: 1px solid #ececf5;
+  border-radius: 11px;
+  margin-bottom: 20px;
+}
+
+.followup-lead-avatar {
+  width: 39px;
+  height: 39px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #6558e8;
+  background: #f0efff;
+  font-weight: 800;
+}
+
+.followup-selected-lead > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.followup-selected-lead strong {
+  color: #34394d;
+  font-size: 13px;
+}
+
+.followup-selected-lead > div:nth-child(2) span {
+  color: #858da0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.followup-lead-status {
+  margin-left: auto;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #f0efff;
+  color: #6558e8;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.followup-lead-status.converted {
+  background: #e9f8ef;
+  color: #26965a;
+}
+
+.followup-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.followup-stat {
+  padding: 15px;
+  border-radius: 10px;
+  background: #f7f8fc;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.followup-stat span {
+  color: #858da0;
+  font-size: 11px;
+}
+
+.followup-stat strong {
+  color: #34394d;
+  font-size: 23px;
+}
+
+.followup-stat.pending-stat strong {
+  color: #d58b28;
+}
+
+.followup-stat.completed-stat strong {
+  color: #26965a;
+}
+
+.followup-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.followup-message svg {
+  flex-shrink: 0;
+}
+
+.followup-message.error {
+  background: #fff0f0;
+  color: #c03939;
+}
+
+.followup-message.success {
+  background: #eaf8ef;
+  color: #21864e;
+}
+
+.followup-history-heading {
+  padding: 19px 0 15px;
+  border-top: 1px solid #edf0f5;
+}
+
+.followup-history-heading h4 {
+  margin: 0 0 5px;
+  color: #34394d;
+  font-size: 15px;
+}
+
+.followup-history-heading > span {
+  color: #858da0;
+  font-size: 11px;
+}
+
+.followup-empty {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #9299aa;
+  text-align: center;
+  padding: 20px;
+}
+
+.followup-empty strong {
+  color: #555d72;
+  font-size: 13px;
+}
+
+.followup-empty p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.followup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.followup-card {
+  padding: 19px;
+  border: 1px solid #e9ebf3;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.followup-card.completed {
+  background: #fcfffd;
+  border-color: #dcefe3;
+}
+
+.followup-card-date {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #858da0;
+  font-size: 11px;
+}
+
+.followup-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.followup-status-badge.pending {
+  color: #bd7a1e;
+  background: #fff4df;
+}
+
+.followup-status-badge.completed {
+  color: #21864e;
+  background: #e7f7ed;
+}
+
+.followup-message-content {
+  padding: 17px;
+  margin: 17px 0;
+  border-radius: 10px;
+  background: #f7f6ff;
+}
+
+.followup-section-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  color: #6558e8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.followup-message-content p,
+.followup-details-grid p {
+  margin: 0;
+  color: #535b70;
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.copy-followup-button {
+  margin-top: 13px;
+  padding: 7px 10px;
+  border: 1px solid #dedbff;
+  border-radius: 7px;
+  background: white;
+  color: #6558e8;
+  font-size: 11px;
+}
+
+.copy-followup-button:hover {
+  background: #f0efff;
+}
+
+.followup-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 3px 0 17px;
+}
+
+.followup-details-grid > div {
+  min-width: 0;
+}
+
+.followup-timing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f7f8fc;
+  color: #737c91;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.followup-timing svg {
+  flex-shrink: 0;
+  color: #6558e8;
+}
+
+.followup-timing strong {
+  color: #34394d;
+}
+
+.followup-completed-date {
+  margin-top: 10px;
+  color: #26965a;
+  font-size: 10px;
+}
+
+.followup-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.mark-completed-button,
+.mark-pending-button {
+  padding: 9px 13px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.mark-completed-button {
+  border: none;
+  background: #e9f8ef;
+  color: #21864e;
+}
+
+.mark-completed-button:hover:not(:disabled) {
+  background: #d7f1e1;
+}
+
+.mark-pending-button {
+  border: 1px solid #e8eaf1;
+  background: white;
+  color: #687187;
+}
+
+.mark-pending-button:hover:not(:disabled) {
+  background: #f5f6fa;
+}
+
+.mark-completed-button:disabled,
+.mark-pending-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.followup-spin {
+  animation: followup-rotation 1s linear infinite;
+}
+
+@keyframes followup-rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 650px) {
+  .followup-manager {
+    padding: 18px;
+  }
+
+  .followup-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .generate-followup-button {
+    width: 100%;
+  }
+
+  .followup-details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .followup-stats {
+    gap: 8px;
+  }
+
+  .followup-stat {
+    padding: 11px;
+  }
+
+  .followup-stat span {
+    font-size: 10px;
+  }
+
+  .followup-stat strong {
+    font-size: 20px;
+  }
+
+  .followup-card {
+    padding: 14px;
+  }
+
+  .followup-selected-lead {
+    flex-wrap: wrap;
+  }
+}

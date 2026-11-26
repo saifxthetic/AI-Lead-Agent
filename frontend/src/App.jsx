@@ -1,4 +1,5 @@
 
+import FollowUpManager from "./FollowUpManager";
 import { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard, Users, Target, TrendingUp, Zap,
@@ -29,11 +30,15 @@ const STATUSES = ["new", "contacted", "qualified", "converted", "lost"];
 function App() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [backendConnected, setBackendConnected] = useState(null);
+
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [updatingLead, setUpdatingLead] = useState(null);
+  const [deletingLead, setDeletingLead] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
@@ -41,7 +46,6 @@ function App() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
 
-  // Stores the ID of the lead whose details are open
   const [selectedLeadId, setSelectedLeadId] = useState(null);
 
   const [newLead, setNewLead] = useState({
@@ -50,19 +54,28 @@ function App() {
     message: ""
   });
 
+  // Fetch leads and maintain accurate backend connection state.
   const fetchLeads = async () => {
     try {
       setError("");
+      setRefreshing(true);
+
       const data = await getAllLeads();
+
       setLeads(data.leads || []);
+      setBackendConnected(true);
     } catch (err) {
       console.error("Error fetching leads:", err);
+
+      setBackendConnected(false);
+
       setError(
         err.response?.data?.detail ||
-        "Unable to load leads. Please check your backend."
+        "Unable to load leads. Please check your backend connection."
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -72,8 +85,12 @@ function App() {
 
   const stats = useMemo(() => ({
     total: leads.length,
-    qualified: leads.filter(lead => lead.status === "qualified").length,
-    converted: leads.filter(lead => lead.status === "converted").length,
+    qualified: leads.filter(
+      lead => lead.status === "qualified"
+    ).length,
+    converted: leads.filter(
+      lead => lead.status === "converted"
+    ).length,
     highPriority: leads.filter(
       lead => lead.ai_analysis?.priority === "High"
     ).length
@@ -89,7 +106,8 @@ function App() {
         lead.message?.toLowerCase().includes(term);
 
       const matchesStatus =
-        statusFilter === "all" || lead.status === statusFilter;
+        statusFilter === "all" ||
+        lead.status === statusFilter;
 
       const matchesPriority =
         priorityFilter === "all" ||
@@ -102,7 +120,9 @@ function App() {
   const statusChartData = useMemo(() => (
     STATUSES.map(status => ({
       name: status.charAt(0).toUpperCase() + status.slice(1),
-      total: leads.filter(lead => lead.status === status).length
+      total: leads.filter(
+        lead => lead.status === status
+      ).length
     }))
   ), [leads]);
 
@@ -122,6 +142,8 @@ function App() {
           lead => lead.lead_id !== result.lead.lead_id
         )
       ]);
+
+      setBackendConnected(true);
 
       setNewLead({
         name: "",
@@ -153,6 +175,8 @@ function App() {
   const handleStatusChange = async (leadId, newStatus) => {
     try {
       setUpdatingLead(leadId);
+      setError("");
+
       await updateLeadStatus(leadId, newStatus);
 
       setLeads(current =>
@@ -163,8 +187,12 @@ function App() {
         )
       );
     } catch (err) {
-      console.error(err);
-      alert("Could not update lead status.");
+      console.error("Status update failed:", err);
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not update lead status. Please try again."
+      );
     } finally {
       setUpdatingLead(null);
     }
@@ -176,18 +204,27 @@ function App() {
     }
 
     try {
+      setDeletingLead(leadId);
+      setError("");
+
       await deleteLead(leadId);
+
       setLeads(current =>
         current.filter(lead => lead.lead_id !== leadId)
       );
 
-      // Close the details panel if the deleted lead was open
       if (selectedLeadId === leadId) {
         setSelectedLeadId(null);
       }
     } catch (err) {
-      console.error(err);
-      alert("Could not delete lead.");
+      console.error("Lead deletion failed:", err);
+
+      setError(
+        err.response?.data?.detail ||
+        "Could not delete lead. Please try again."
+      );
+    } finally {
+      setDeletingLead(null);
     }
   };
 
@@ -196,7 +233,9 @@ function App() {
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return "Recently added";
+    if (Number.isNaN(date.getTime())) {
+      return "Recently added";
+    }
 
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -205,15 +244,26 @@ function App() {
     });
   };
 
+  const connectionLabel =
+    backendConnected === null
+      ? "Connecting..."
+      : backendConnected
+        ? "Backend connected"
+        : "Backend unavailable";
+
   return (
     <div className="app-shell">
       <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="brand">
-          <div className="brand-icon"><Sparkles size={21} /></div>
+          <div className="brand-icon">
+            <Sparkles size={21} />
+          </div>
+
           <div>
             <h2>LeadPilot</h2>
             <span>AI MANAGEMENT</span>
           </div>
+
           <button
             className="mobile-close"
             onClick={() => setSidebarOpen(false)}
@@ -273,9 +323,20 @@ function App() {
 
         <div className="sidebar-bottom">
           <div className="sidebar-status">
-            <span className="online-dot"></span>
-            <span>Backend connected</span>
+            <span
+              className="online-dot"
+              style={{
+                background:
+                  backendConnected === null
+                    ? "#e6a23c"
+                    : backendConnected
+                      ? "#28c98a"
+                      : "#e05260"
+              }}
+            />
+            <span>{connectionLabel}</span>
           </div>
+
           <p>AI Lead Agent · Version 1.0</p>
         </div>
       </aside>
@@ -297,6 +358,7 @@ function App() {
             >
               <Menu size={22} />
             </button>
+
             <div>
               <p className="breadcrumb">Workspace / Overview</p>
               <h1>Dashboard</h1>
@@ -305,8 +367,22 @@ function App() {
 
           <div className="topbar-right">
             <div className="system-indicator">
-              <span className="online-dot"></span>
-              System online
+              <span
+                className="online-dot"
+                style={{
+                  background:
+                    backendConnected === null
+                      ? "#e6a23c"
+                      : backendConnected
+                        ? "#28c98a"
+                        : "#e05260"
+                }}
+              />
+              {backendConnected === null
+                ? "Connecting..."
+                : backendConnected
+                  ? "System online"
+                  : "System offline"}
             </div>
 
             <button
@@ -314,14 +390,19 @@ function App() {
               onClick={fetchLeads}
               title="Refresh leads"
               aria-label="Refresh leads"
+              disabled={refreshing}
             >
-              <RefreshCw size={18} />
+              <RefreshCw
+                size={18}
+                className={refreshing ? "spin" : ""}
+              />
             </button>
 
             <div className="profile">
               <div className="profile-avatar">
                 <UserRound size={19} />
               </div>
+
               <div className="profile-info">
                 <strong>Administrator</strong>
                 <span>Workspace owner</span>
@@ -340,7 +421,10 @@ function App() {
                 your opportunities in one place.
               </p>
             </div>
-            <div className="welcome-icon"><Sparkles size={30} /></div>
+
+            <div className="welcome-icon">
+              <Sparkles size={30} />
+            </div>
           </section>
 
           {error && (
@@ -359,6 +443,7 @@ function App() {
               description="All stored leads"
               color="blue"
             />
+
             <StatCard
               icon={<Target size={20} />}
               label="Qualified Leads"
@@ -366,6 +451,7 @@ function App() {
               description="Ready for opportunities"
               color="purple"
             />
+
             <StatCard
               icon={<TrendingUp size={20} />}
               label="Converted Leads"
@@ -373,6 +459,7 @@ function App() {
               description="Successfully converted"
               color="green"
             />
+
             <StatCard
               icon={<Zap size={20} />}
               label="High Priority"
@@ -389,11 +476,16 @@ function App() {
                   <h3>Lead Overview</h3>
                   <p>Distribution of leads by status</p>
                 </div>
-                <div className="heading-icon"><Activity size={19} /></div>
+
+                <div className="heading-icon">
+                  <Activity size={19} />
+                </div>
               </div>
 
               {loading ? (
-                <div className="chart-placeholder">Loading chart...</div>
+                <div className="chart-placeholder">
+                  Loading chart...
+                </div>
               ) : leads.length === 0 ? (
                 <div className="chart-placeholder">
                   Add leads to see your analytics.
@@ -403,26 +495,41 @@ function App() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={statusChartData}
-                      margin={{ top: 12, right: 8, left: -18, bottom: 0 }}
+                      margin={{
+                        top: 12,
+                        right: 8,
+                        left: -18,
+                        bottom: 0
+                      }}
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
                         stroke="#edf0f5"
                       />
+
                       <XAxis
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "#858da0", fontSize: 12 }}
+                        tick={{
+                          fill: "#858da0",
+                          fontSize: 12
+                        }}
                       />
+
                       <YAxis
                         allowDecimals={false}
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "#858da0", fontSize: 12 }}
+                        tick={{
+                          fill: "#858da0",
+                          fontSize: 12
+                        }}
                       />
+
                       <Tooltip />
+
                       <Bar
                         dataKey="total"
                         name="Leads"
@@ -442,7 +549,10 @@ function App() {
                   <h3>AI Intelligence</h3>
                   <p>Insights generated for your leads</p>
                 </div>
-                <div className="ai-icon"><Sparkles size={19} /></div>
+
+                <div className="ai-icon">
+                  <Sparkles size={19} />
+                </div>
               </div>
 
               <div className="ai-summary">
@@ -453,6 +563,7 @@ function App() {
                   value={loading ? "—" : stats.highPriority}
                   color="high"
                 />
+
                 <SummaryRow
                   icon={<CheckCircle2 size={17} />}
                   label="Qualified"
@@ -460,12 +571,18 @@ function App() {
                   value={loading ? "—" : stats.qualified}
                   color="qualified"
                 />
+
                 <SummaryRow
                   icon={<Clock3 size={17} />}
                   label="New leads"
                   description="Awaiting follow-up"
-                  value={loading ? "—" :
-                    leads.filter(lead => lead.status === "new").length}
+                  value={
+                    loading
+                      ? "—"
+                      : leads.filter(
+                          lead => lead.status === "new"
+                        ).length
+                  }
                   color="new"
                 />
               </div>
@@ -477,10 +594,14 @@ function App() {
             </div>
           </section>
 
-          {/* Advanced analytics powered by the existing lead data */}
           <AdvancedAnalytics leads={leads} />
 
-          <section className="panel leads-panel" id="leads-section">
+          <FollowUpManager leads={leads} />
+
+          <section
+            className="panel leads-panel"
+            id="leads-section"
+          >
             <div className="leads-heading">
               <div>
                 <h3>Recent Leads</h3>
@@ -503,11 +624,13 @@ function App() {
             <div className="filters">
               <div className="search-box">
                 <Search size={18} />
+
                 <input
                   placeholder="Search by name, email or message..."
                   value={search}
                   onChange={event => setSearch(event.target.value)}
                 />
+
                 {search && (
                   <button
                     className="clear-search"
@@ -524,6 +647,7 @@ function App() {
                 onChange={event => setStatusFilter(event.target.value)}
               >
                 <option value="all">All statuses</option>
+
                 {STATUSES.map(status => (
                   <option key={status} value={status}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -557,13 +681,19 @@ function App() {
 
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan="6" className="empty-state">
-                      Loading your leads...
-                    </td></tr>
+                    <tr>
+                      <td colSpan="6" className="empty-state">
+                        Loading your leads...
+                      </td>
+                    </tr>
                   ) : filteredLeads.length === 0 ? (
-                    <tr><td colSpan="6" className="empty-state">
-                      No leads match your search or filters.
-                    </td></tr>
+                    <tr>
+                      <td colSpan="6" className="empty-state">
+                        {leads.length === 0
+                          ? "No leads yet. Add your first lead to get started."
+                          : "No leads match your search or filters."}
+                      </td>
+                    </tr>
                   ) : (
                     filteredLeads.map(lead => (
                       <tr key={lead.lead_id}>
@@ -572,6 +702,7 @@ function App() {
                             <div className="lead-avatar">
                               {lead.name?.charAt(0)?.toUpperCase() || "?"}
                             </div>
+
                             <div className="lead-details">
                               <button
                                 type="button"
@@ -590,19 +721,28 @@ function App() {
                               >
                                 {lead.name}
                               </button>
+
                               <span>{lead.email}</span>
                             </div>
                           </div>
                         </td>
 
                         <td>
-                          <span className={`quality-badge ${lead.ai_analysis?.lead_quality?.toLowerCase() || "unknown"}`}>
+                          <span
+                            className={`quality-badge ${
+                              lead.ai_analysis?.lead_quality?.toLowerCase() || "unknown"
+                            }`}
+                          >
                             {lead.ai_analysis?.lead_quality || "N/A"}
                           </span>
                         </td>
 
                         <td>
-                          <span className={`priority-badge ${lead.ai_analysis?.priority?.toLowerCase() || "unknown"}`}>
+                          <span
+                            className={`priority-badge ${
+                              lead.ai_analysis?.priority?.toLowerCase() || "unknown"
+                            }`}
+                          >
                             <span className="priority-dot"></span>
                             {lead.ai_analysis?.priority || "N/A"}
                           </span>
@@ -637,8 +777,17 @@ function App() {
                             className="delete-button"
                             onClick={() => handleDelete(lead.lead_id)}
                             title="Delete lead"
+                            aria-label={`Delete ${lead.name}`}
+                            disabled={deletingLead === lead.lead_id}
                           >
-                            <Trash2 size={17} />
+                            {deletingLead === lead.lead_id ? (
+                              <LoaderCircle
+                                size={17}
+                                className="spin"
+                              />
+                            ) : (
+                              <Trash2 size={17} />
+                            )}
                           </button>
                         </td>
                       </tr>
@@ -653,9 +802,19 @@ function App() {
                 Showing <strong>{filteredLeads.length}</strong> of{" "}
                 <strong>{leads.length}</strong> leads
               </span>
+
               <span className="live-indicator">
-                <span className="online-dot"></span>
-                Live database data
+                <span
+                  className="online-dot"
+                  style={{
+                    background: backendConnected
+                      ? "#28c98a"
+                      : "#e05260"
+                  }}
+                />
+                {backendConnected
+                  ? "Live database data"
+                  : "Database connection unavailable"}
               </span>
             </div>
           </section>
@@ -667,7 +826,6 @@ function App() {
         </div>
       </main>
 
-      {/* Individual lead details panel */}
       {selectedLeadId && (
         <LeadDetails
           leadId={selectedLeadId}
@@ -689,6 +847,7 @@ function App() {
                 <div className="modal-title-icon">
                   <Sparkles size={19} />
                 </div>
+
                 <h2>Add a new lead</h2>
                 <p>Enter customer information for AI analysis.</p>
               </div>
@@ -705,15 +864,20 @@ function App() {
 
             <form className="lead-form" onSubmit={handleCreateLead}>
               <label htmlFor="lead-name">Full name</label>
+
               <div className="form-input">
                 <UserRound size={17} />
+
                 <input
                   id="lead-name"
                   type="text"
                   placeholder="e.g. Ahmed Khan"
                   value={newLead.name}
                   onChange={event =>
-                    setNewLead({ ...newLead, name: event.target.value })
+                    setNewLead({
+                      ...newLead,
+                      name: event.target.value
+                    })
                   }
                   required
                   maxLength={100}
@@ -721,29 +885,41 @@ function App() {
               </div>
 
               <label htmlFor="lead-email">Email address</label>
+
               <div className="form-input">
                 <Mail size={17} />
+
                 <input
                   id="lead-email"
                   type="email"
                   placeholder="e.g. ahmed@example.com"
                   value={newLead.email}
                   onChange={event =>
-                    setNewLead({ ...newLead, email: event.target.value })
+                    setNewLead({
+                      ...newLead,
+                      email: event.target.value
+                    })
                   }
                   required
                 />
               </div>
 
-              <label htmlFor="lead-message">Message / Requirements</label>
+              <label htmlFor="lead-message">
+                Message / Requirements
+              </label>
+
               <div className="form-input textarea-input">
                 <MessageSquare size={17} />
+
                 <textarea
                   id="lead-message"
                   placeholder="Describe what the customer needs..."
                   value={newLead.message}
                   onChange={event =>
-                    setNewLead({ ...newLead, message: event.target.value })
+                    setNewLead({
+                      ...newLead,
+                      message: event.target.value
+                    })
                   }
                   rows={4}
                   required
@@ -753,6 +929,7 @@ function App() {
 
               <div className="ai-notice">
                 <Sparkles size={17} />
+
                 <span>
                   Gemini AI will automatically analyze this lead and
                   generate its quality, priority, category and recommendations.
@@ -827,10 +1004,12 @@ function SummaryRow({ icon, label, description, value, color }) {
   return (
     <div className="ai-summary-row">
       <div className={`summary-icon ${color}`}>{icon}</div>
+
       <div className="summary-text">
         <strong>{label}</strong>
         <span>{description}</span>
       </div>
+
       <strong className="summary-number">{value}</strong>
     </div>
   );
